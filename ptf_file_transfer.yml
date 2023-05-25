@@ -1,0 +1,18 @@
+---
+- hosts: all
+  tags:
+    - configuration
+  gather_facts: no
+  tasks:
+    - name: Create a directory if it is does not exist
+      file:
+              path: /home/{{ user_name }}/PTF/{{ ptf_group_dir }}
+              state: directory
+              mode: '0755'      
+    - name: PTF File transfer 
+      shell: ./file_transfer.sh -u "{{ user_name }}" -p "{{ ptf_group_dir }}" -r "{{ repo_server }}" -t "{{ target_system }}" -f "{{ ptf_file }}"
+      register: echo
+      delegate_to: 127.0.0.1 
+    - debug:
+            msg: "{{ echo }}"  
+
