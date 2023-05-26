@@ -10,8 +10,10 @@
 
     - name: Copy file to Ansible host
       fetch:
-            src: /home/u_ans_ft/systems_value.txt
-            dest: home/u_ans_ft/playbook/fetch_system_values/
+           src: /home/u_ans_ft/systems_value.txt
+           dest: home/u_ans_ft/playbook/fetch_system_values/
+      tags:
+              - no_run
 
     - name: Differentiate system value of the target AS400 Server to the value of the basis file
       shell: diff home/u_ans_ft/playbook/fetch_system_values/{{ inventory_hostname }}/home/u_ans_ft/systems_value.txt "{{ file_basis_directory }}"
@@ -22,6 +24,7 @@
     - debug:
          msg: "The Files are the same"
       when: diff_result.rc == 0
+
     - debug:
             msg: "{{ ['The Files are not the same,kindly see results of difference below'] + diff_result.stdout_lines }}"
-      when: diff_result.stdout != 0
+      when: diff_result.rc != 0
