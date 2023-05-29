@@ -22,9 +22,9 @@
       register: diff_result
 
     - debug:
-         msg: "The Files are the same"
+         msg: 'The System value is the same with the file basis for host {{ inventory_hostname }}'
       when: diff_result.rc == 0
 
     - debug:
-            msg: "{{ ['The Files are not the same,kindly see results of difference below'] + diff_result.stdout_lines }}"
+            msg: "{{ ['The System value are different with the basis file for the target host, Kindly see results of difference below'] + diff_result.stdout_lines }}"
       when: diff_result.rc != 0
