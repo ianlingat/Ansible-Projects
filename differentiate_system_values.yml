@@ -9,17 +9,17 @@
            state: directory
       delegate_to: 127.0.0.1
 
-    - name: Creation of source file for system value comparison	
+    - name: Creation of source file for system value comparison.	
       shell: echo -e 'QALWOBJRST:*ALWPGMADP\nQALWOBJRST:*ALWSYSSTT\nQALWOBJRST:*ALWPTF\nQALWUSRDMN:*ALL\nQASTLVL:*INTERMED\nQCRTAUT:*EXCLUDE\nQCONSOLE:*EXCLUDE\nQCONSOLE:DSP01\nQCTLSBSD:QSYS/QCTL\nQDSPSGNINF:1\nQAUDENDACN:*NOTIFY\nQAUDFRCLVL:*SYS\nQAUDLVL:*AUTFAIL\nQAUDLVL:*CREATE\nQAUDLVL:*DELETE\nQAUDLVL:*PGMADP\nQAUDLVL:*SAVRST\nQAUDLVL:*SECURITY\nQAUDLVL:*OBJMGT\nQAUDLVL:*SPLFDTA\nQAUDLVL:*PRTDTA\nQAUDLVL:*PGMFAIL\nQAUDLVL:*SYSMGT\nQAUDLVL:*NETCMN\nQAUDLVL:*SERVICE\nQAUDCTL:*OBJAUD\nQAUDCTL:*AUDLVL\nQAUTOCFG:1\nQAUTOVRT:*NOMAX\nQDEVRCYACN:*DSCMSG\nQDSCJOBITV:5\nQINACTITV:60\nQINACTMSGQ:*DSCJOB\nQJOBMSGQFL:*PRTWRAP\nQLMTDEVSSN:1\nQLMTSECOFR:1\nQLMTSECOFR:*JOBLOGSVR\nQMAXSGNACN:2\nQMAXSIGN:3\nQPWDEXPITV:90\nQPWDLMTAJC:0\nQPWDLMTCHR:*NONE\nQPWDLMTREP:2\nQPWDMAXLEN:10\nQPWDMINLEN:8\nQPWDPOSDIF:0\nQPWDRQDDGT:1\nQPWDRQDDIF:5\nQPWDVLDPGM:*NONE\nQRETSVRSEC:1\nQRMTSIGN:*FRCSIGNON\nQRMTSRVATR:0\nQSECURITY:40\nQQRYDEGREE:*OPTIMIZE\ntesttesttest' > dsv/motherfile/file_basis.txt
       delegate_to: 127.0.0.1
 
-    - name: Creation of system value file of the target AS400 Server
+    - name: Creation of system value file of the target AS400 Server.
       shell: sysval -p QALWOBJRST QALWOBJRST QALWOBJRST QALWUSRDMN QASTLVL QCRTAUT QCONSOLE QCONSOLE QCTLSBSD QDSPSGNINF QAUDENDACN QAUDFRCLVL QAUDLVL QAUDLVL QAUDLVL QAUDLVL QAUDLVL QAUDLVL QAUDLVL QAUDLVL QAUDLVL QAUDLVL QAUDLVL QAUDLVL QAUDLVL QAUDCTL QAUDCTL QAUTOCFG QAUTOVRT QDEVRCYACN QDSCJOBITV QINACTITV QINACTMSGQ QJOBMSGQFL QLMTDEVSSN QLMTSECOFR QLMTSECOFR QMAXSGNACN QMAXSIGN QPWDEXPITV QPWDLMTAJC QPWDLMTCHR QPWDLMTREP QPWDMAXLEN QPWDMINLEN QPWDPOSDIF QPWDRQDDGT QPWDRQDDIF QPWDVLDPGM QRETSVRSEC QRMTSIGN QRMTSRVATR QSECURITY QQRYDEGREE > /home/u_ans_ft/systems_value.txt
       register: sysval
     - debug:
             msg: "{{ sysval }}"
         
-    - name: Creation of directory on Ansible Server for fetching of system vlaue on AS400 Server
+    - name: Creation of directory on Ansible Server for fetching of system value on AS400 Server.
       file:
            path: dsv/fetch_system_values/
            state: directory
@@ -30,7 +30,7 @@
            src: /home/u_ans_ft/systems_value.txt
            dest: dsv/fetch_system_values/
 
-    - name: Differentiate system value of the target AS400 Server to the value of the basis file
+    - name: Differentiate system value of the target AS400 Server to the value of the basis file.
       shell: diff dsv/fetch_system_values/{{ inventory_hostname }}/home/u_ans_ft/systems_value.txt dsv/mother_file/file_basis.txt
       delegate_to: 127.0.0.1
       failed_when: "diff_result.rc > 1"
@@ -42,7 +42,7 @@
          msg: "{{ ['The System value are different with the basis file for the target host, Kindly see results of difference below'] + diff_result.stdout_lines }}"
       when: diff_result.rc != 0
 
-    - name: Removing of Source file on Ansible Server
+    - name: Removing of Source file on Ansible Server.
       file: 
            path: dsv/motherfile/filebasis.txt
            state: absent
