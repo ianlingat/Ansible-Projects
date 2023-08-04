@@ -9,7 +9,7 @@
            state: directory
       delegate_to: 127.0.0.1
 
-    - name: Creation of source file for system value comparison.	
+    - name: Creation of source file for system value comparison.
       shell: echo -e 'QALWOBJRST:*ALWPGMADP\nQALWOBJRST:*ALWSYSSTT\nQALWOBJRST:*ALWPTF\nQALWUSRDMN:*ALL\nQASTLVL:*INTERMED\nQCRTAUT:*EXCLUDE\nQCONSOLE:*EXCLUDE\nQCONSOLE:DSP01\nQCTLSBSD:QSYS/QCTL\nQDSPSGNINF:1\nQAUDENDACN:*NOTIFY\nQAUDFRCLVL:*SYS\nQAUDLVL:*AUTFAIL\nQAUDLVL:*CREATE\nQAUDLVL:*DELETE\nQAUDLVL:*PGMADP\nQAUDLVL:*SAVRST\nQAUDLVL:*SECURITY\nQAUDLVL:*OBJMGT\nQAUDLVL:*SPLFDTA\nQAUDLVL:*PRTDTA\nQAUDLVL:*PGMFAIL\nQAUDLVL:*SYSMGT\nQAUDLVL:*NETCMN\nQAUDLVL:*SERVICE\nQAUDCTL:*OBJAUD\nQAUDCTL:*AUDLVL\nQAUTOCFG:1\nQAUTOVRT:*NOMAX\nQDEVRCYACN:*DSCMSG\nQDSCJOBITV:5\nQINACTITV:60\nQINACTMSGQ:*DSCJOB\nQJOBMSGQFL:*PRTWRAP\nQLMTDEVSSN:1\nQLMTSECOFR:1\nQLMTSECOFR:*JOBLOGSVR\nQMAXSGNACN:2\nQMAXSIGN:3\nQPWDEXPITV:90\nQPWDLMTAJC:0\nQPWDLMTCHR:*NONE\nQPWDLMTREP:2\nQPWDMAXLEN:10\nQPWDMINLEN:8\nQPWDPOSDIF:0\nQPWDRQDDGT:1\nQPWDRQDDIF:5\nQPWDVLDPGM:*NONE\nQRETSVRSEC:1\nQRMTSIGN:*FRCSIGNON\nQRMTSRVATR:0\nQSECURITY:40\nQQRYDEGREE:*OPTIMIZE\ntesttesttest' > dsv/motherfile/file_basis.txt
       delegate_to: 127.0.0.1
 
@@ -48,9 +48,13 @@
            state: absent
       delegate_to: 127.0.0.1
 
-    - name: Removing of target servers system value file.
+    - name: Removing of target servers system value file on Ansible Server.
       file: 
            path: dsv/fetch_system_values/{{ inventory_hostname }}
            state: absent
       delegate_to: 127.0.0.1
 
+    - name: Removing of created system value file on the target server.
+      file:
+           path: /home/u_ans_ft/systems_value.txt
+           state: absent
