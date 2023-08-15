@@ -1,3 +1,7 @@
+#Christian Arth Lingat
+#The Playbook aims to compare system value files of an AS400 server to a user input list.
+#SAMPLE USAGE: ansible-playbook -u u_ans_ft -i inventory differentiate_system_values.yml -e 'system_value=QALWOBJRST=*ALL'
+
 ---
 - hosts: all
   gather_facts: no
