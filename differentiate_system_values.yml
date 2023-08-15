@@ -6,27 +6,30 @@
     - name: Creation of temporary directories on Ansible Tower.
       command: ./dir_creator.sh
       register: dir_creator
-      delegate_to: 127.0.0.1      
+      delegate_to: 127.0.0.1
     - debug:
             msg: "{{ dir_creator.stdout_lines }}"
-
+    
     - name: Creation of source file for system value comparison.
-      shell: echo -e "QALWOBJRST:*ALWPGMADP\nQALWOBJRST:*ALWSYSSTT\nQALWOBJRST:*ALWPTF\nQALWUSRDMN:*ALL\nQASTLVL:*INTERMED\nQCRTAUT:*EXCLUDE\nQCONSOLE:*EXCLUDE\nQCONSOLE:DSP01\nQCTLSBSD:QSYS/QCTL\nQDSPSGNINF:1\nQAUDENDACN:*NOTIFY\nQAUDFRCLVL:*SYS\nQAUDLVL:*AUTFAIL\nQAUDLVL:*CREATE\nQAUDLVL:*DELETE\nQAUDLVL:*PGMADP\nQAUDLVL:*SAVRST\nQAUDLVL:*SECURITY\nQAUDLVL:*OBJMGT\nQAUDLVL:*SPLFDTA\nQAUDLVL:*PRTDTA\nQAUDLVL:*PGMFAIL\nQAUDLVL:*SYSMGT\nQAUDLVL:*NETCMN\nQAUDLVL:*SERVICE\nQAUDCTL:*OBJAUD\nQAUDCTL:*AUDLVL\nQAUTOCFG:1\nQAUTOVRT:*NOMAX\nQDEVRCYACN:*DSCMSG\nQDSCJOBITV:5\nQINACTITV:60\nQINACTMSGQ:*DSCJOB\nQJOBMSGQFL:*PRTWRAP\nQLMTDEVSSN:1\nQLMTSECOFR:1\nQLMTSECOFR:*JOBLOGSVR\nQMAXSGNACN:2\nQMAXSIGN:3\nQPWDEXPITV:90\nQPWDLMTAJC:0\nQPWDLMTCHR:*NONE\nQPWDLMTREP:2\nQPWDMAXLEN:10\nQPWDMINLEN:8\nQPWDPOSDIF:0\nQPWDRQDDGT:1\nQPWDRQDDIF:5\nQPWDVLDPGM:*NONE\nQRETSVRSEC:1\nQRMTSIGN:*FRCSIGNON\nQRMTSRVATR:0\nQSECURITY:40\nQQRYDEGREE:*OPTIMIZE" > dsv/motherfile/file_basis.txt
+      shell: echo '{{ system_value }}' | sed 's/ /\n/g' > dsv/motherfile/file_basis.txt
       delegate_to: 127.0.0.1
 
+    - name: Parsing system value file on the target AS400 Server.
+      shell: echo '{{ system_value }}' | awk 'BEGIN {OFS=" "} {for (i=1; i<=NF; i++) {sub(/\=.*/, "", $i)}; print}' > /home/u_ans_ft/value.txt
+
     - name: Creation of system value file of the target AS400 Server.
-      shell: sysval -p QALWOBJRST QALWOBJRST QALWOBJRST QALWUSRDMN QASTLVL QCRTAUT QCONSOLE QCONSOLE QCTLSBSD QDSPSGNINF QAUDENDACN QAUDFRCLVL QAUDLVL QAUDLVL QAUDLVL QAUDLVL QAUDLVL QAUDLVL QAUDLVL QAUDLVL QAUDLVL QAUDLVL QAUDLVL QAUDLVL QAUDLVL QAUDCTL QAUDCTL QAUTOCFG QAUTOVRT QDEVRCYACN QDSCJOBITV QINACTITV QINACTMSGQ QJOBMSGQFL QLMTDEVSSN QLMTSECOFR QLMTSECOFR QMAXSGNACN QMAXSIGN QPWDEXPITV QPWDLMTAJC QPWDLMTCHR QPWDLMTREP QPWDMAXLEN QPWDMINLEN QPWDPOSDIF QPWDRQDDGT QPWDRQDDIF QPWDVLDPGM QRETSVRSEC QRMTSIGN QRMTSRVATR QSECURITY QQRYDEGREE > /home/u_ans_ft/systems_value.txt
+      shell: sysval -p `cat /home/u_ans_ft/value.txt` > /home/u_ans_ft/systems_value.txt
       register: sysval
     - debug:
             msg: "{{ sysval }}"
-            
+
     - name: Copying file from target AS400 server to the Ansible Server.
       fetch:
             src: /home/u_ans_ft/systems_value.txt
             dest: dsv/fetch_system_values/
 
     - name: Differentiate system value of the target AS400 Server to the value of the basis file.
-      shell: diff -y dsv/fetch_system_values/{{ inventory_hostname }}/home/u_ans_ft/systems_value.txt dsv/motherfile/file_basis.txt --suppress-blank-empty 
+      shell: diff -y dsv/motherfile/file_basis.txt dsv/fetch_system_values/{{ inventory_hostname }}/home/u_ans_ft/systems_value.txt --suppress-blank-empty
       failed_when: "diff_result.rc > 1"
       delegate_to: 127.0.0.1
       register: diff_result
@@ -34,17 +37,20 @@
          msg: 'The System value is the same with the file basis for host {{ inventory_hostname }}'
       when: diff_result.rc == 0
     - debug:
-            msg: "{{ ['The System value are different with the basis file for the target host, Kindly see results of difference below'] + diff_result.stdout_lines | map('regex_replace', '\\t', '') | list }}"
+         msg: "{{ ['The System value are different with the basis file for the target host, Kindly see results of difference below'] + diff_result.stdout_lines | map('regex_replace', '\\t', '') | list }}"
       when: diff_result.rc != 0
 
     - name: Removing of temporary directories on Ansible Tower.
       shell: ./dir_remover.sh
       register: dir_remover
-      delegate_to: 127.0.0.1      
+      delegate_to: 127.0.0.1
     - debug:
-            msg: "{{ dir_remover.stdout_lines }}"
-
+          msg: "{{ dir_remover.stdout_lines }}"
+ 
     - name: Removing of created system value file on the target server.
       file:
-           path: /home/u_ans_ft/systems_value.txt
+           path: "{{ item }}"
            state: absent
+      with_items:
+           - /home/u_ans_ft/systems_value.txt
+           - /home/u_ans_ft/value.txt
