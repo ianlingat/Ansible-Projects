@@ -1,0 +1,11 @@
+[windows]
+WIN-9NECV02QISE ansible_host=172.1.87.195 
+
+
+[windows:vars]
+ansible_user=Administrator 
+ansible_password=P@$$w0rd@1
+ansible_port=5985 
+ansible_connection=winrm 
+ansible_winrm_transport=basic
+ansible_winrm_server_cert_validation=ignore

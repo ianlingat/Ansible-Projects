@@ -1,0 +1,11 @@
+---
+- hosts: all
+  gather_facts: no
+  become: false
+  tasks:
+          - name: Connection checker for Windows
+            win_shell: "{{ cli_command }}"
+            register: shell_command
+
+          - debug:
+                msg: "{{ shell_command }}" 

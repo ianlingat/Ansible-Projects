@@ -1,0 +1,9 @@
+---
+- hosts: all
+  gather_facts: no
+  become: false
+  tasks:
+          - name: Set a single address on the adapter named WiFi
+            win_dns_client:
+                adapter_names: WiFi
+                ipv4_addresses: 172.1.86.253

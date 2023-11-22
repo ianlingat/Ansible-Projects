@@ -1,0 +1,13 @@
+---
+- hosts: all
+  gather_facts: no
+  become: false
+  tasks:
+          - name: Change the hostname to sample-hostname
+            win_hostname:
+                    name: ANSIBLE-TEST-MACHINE
+            register: res
+          - debug:
+                msg: "{{ res }}"
+          - name: Reboot the machine with all defaults
+            win_reboot:       

@@ -1,0 +1,38 @@
+---
+- hosts: all
+  gather_facts: no
+
+  tasks:
+          - name: Use the csv results as variable for hostname.
+            shell: cat MetroRetail_Host/MetroRetail_'{{ region }}'_'{{ department }}'_Hostname.csv | egrep -v 'STATUS|DONE' | head -n 1 #read
+            delegate_to: 127.0.0.1
+            register: hostname
+
+          - name: Use the variable hostname filtered on csv
+            shell: echo This is the hostname to be used "{{ hostname.stdout }}"
+            register: hostname_results
+            delegate_to: 127.0.0.1
+
+          - debug:
+                  msg: "{{ hostname_results.stdout }}"
+
+          - name: Updating the results of the hostname csv file.
+            shell: "sed -i \"$(cat MetroRetail_Host/MetroRetail_'{{ region }}'_'{{ department }}'_Hostname.csv | egrep -n -v 'STATUS|DONE' | grep '{{ hostname.stdout }}' | cut -d: -f1)s/.*/&,DONE,$(date '+%Y-%m-%d %H:%M:%S')/\" MetroRetail_Host/MetroRetail_'{{ region }}'_'{{ department }}'_Hostname.csv" #write to file
+            args:
+             executable: /bin/bash
+            delegate_to: 127.0.0.1
+
+          - name: Checking of hostname file
+            shell: cat MetroRetail_Host/MetroRetail_'{{ region }}'_'{{ department }}'_Hostname.csv | grep "{{ hostname.stdout }}" -C3
+            register: hostname_file
+            delegate_to: 127.0.0.1
+
+          - debug:
+                  msg: "{{ hostname_file.stdout_lines }}" 
+
+          - name: Connection checker for Windows
+            win_shell: Get-WmiObject -Class Win32_OperatingSystem | Select-Object -ExpandProperty Version
+            register: shell_command
+
+          - debug:
+                msg: "'Current Windows OS Version: '{{ shell_command.stdout_lines }}"             

