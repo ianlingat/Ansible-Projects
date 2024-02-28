@@ -1,0 +1,64 @@
+#Christian Arth Lingat
+#v1.2
+#The Playbook aims to compare system value files of an AS400 server to a user input list.
+#SAMPLE USAGE: ansible-playbook -u u_ans_ft -i inventory differentiate_system_values.yml -e 'system_value=QALWOBJRST=*ALWPGMADP,QASTLVL=*BASIC,QAUDLVL=*AUTFAIL*CREATE' 
+---
+- hosts: all
+  gather_facts: no
+  tasks:
+
+    - name: Creation of temporary directories on Ansible Tower.
+      command: ./dir_creator.sh
+      register: dir_creator
+      delegate_to: 127.0.0.1
+    - debug:
+            msg: "{{ dir_creator.stdout_lines }}"
+    
+    - name: Creation of source file for system value comparison.
+      shell: echo '{{ system_value }}' | sed 's/,/\n/g' | sed 's/ //g' > dsv/motherfile/file_basis.txt
+      delegate_to: 127.0.0.1
+
+    - name: Parsing system value file on the target AS400 Server.
+      shell:  echo '{{ system_value }}'| awk -F, '{for (i=1; i<=NF; i++) {split($i, arr, "="); printf "%s ", arr[1]}}' | sed 's/ $//' > /home/u_ans_ft/value.txt
+
+    - name: Creation of system value file of the target AS400 Server.
+      shell: sysval -p `cat /home/u_ans_ft/value.txt` | sed 's/ //g' > /home/u_ans_ft/systems_value.txt
+      register: sysval
+    - debug:
+            msg: "{{ sysval }}"
+
+    - name: Copying file from target AS400 server to the Ansible Server.
+      fetch:
+            src: /home/u_ans_ft/systems_value.txt
+            dest: dsv/fetch_system_values/
+
+    - name: Differentiate system value of the target AS400 Server to the value of the basis file.
+      shell: diff -y dsv/motherfile/file_basis.txt dsv/fetch_system_values/{{ inventory_hostname }}/home/u_ans_ft/systems_value.txt --suppress-blank-empty -W 800 | grep '|'
+      failed_when: "diff_result.rc > 1"
+      delegate_to: 127.0.0.1
+      register: diff_result
+    - debug:
+         msg: 'The system value for host {{ inventory_hostname }} is the same with the AS400 baseline configuration'
+      when: diff_result.rc != 0
+    - name: Setting up facts for different values.
+      set_fact:
+              diff_val: 'The system value for host {{ inventory_hostname }} is not the same with the AS400 baseline configuration. Please check the following:'  
+      when: diff_result.rc == 0 
+    - debug: 
+         msg: "{{ ['The system value for host ' + ansible_host + ' is not the same with the AS400 baseline configuration. Please check the following:'] + diff_result.stdout_lines | map('regex_replace', '\\t', '') | list }}"
+      when: diff_result.rc == 0
+
+    - name: Removing of temporary directories on Ansible Tower.
+      shell: ./dir_remover.sh
+      register: dir_remover
+      delegate_to: 127.0.0.1
+    - debug:
+         msg: "{{ dir_remover.stdout_lines }}"
+ 
+    - name: Removing of created system value file on the target server.
+      file:
+           path: "{{ item }}"
+           state: absent
+      with_items:
+           - /home/u_ans_ft/systems_value.txt
+           - /home/u_ans_ft/value.txt
